@@ -3,15 +3,21 @@ An end-to-end Job Market Trends Analysis and Search Platform leveraging PySpark 
 
 📌 Project Overview
 This project allows users to:
+
 ✅ Search for jobs by title, location, and skills
+
 ✅ Save jobs for later viewing
+
 ✅ Sign up and log in with OTP verification (using Twilio + pyotp) for secure access
+
 ✅ View categorized insights for remote, onsite, experience-based jobs
+
 ✅ Use a clean Flask-based dashboard for a seamless experience
 
 Spark is used for batch processing and dataset preparation, ensuring cleaned and structured data for the Flask app.
 
 🗂️ Dataset Sources
+
 Used real-world Kaggle job market datasets:
 
 1️⃣ LinkedIn Job Postings
@@ -28,6 +34,7 @@ Deduplication
 Field standardization
 
 ⚙️ Tech Stack
+
 Python 3.11
 
 Apache Spark (PySpark) – batch processing and data cleaning
@@ -45,6 +52,7 @@ Matplotlib, Pandas – for data manipulation and plotting if required
 HTML, CSS, Jinja2 – frontend templating
 
 🚀 Features
+
 ✅ User Authentication with OTP Verification:
 Secure sign-up/login using Twilio + PyOTP for OTP-based verification.
 
