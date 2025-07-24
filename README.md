@@ -79,11 +79,17 @@ pip install -r requirements.txt
 http://127.0.0.1:5000 to use the Job Market Trends Analyzer.
 
 🖥️ Pages Included
+
 ✅ Landing Page (index.html) – Introduction to the platform
+
 ✅ Login and Signup (login.html, signup.html) – Secure authentication
+
 ✅ Dashboard (dashboard.html) – User overview and navigation
+
 ✅ Search Jobs (search_jobs.html) – Search and explore available jobs
+
 ✅ Saved Jobs (saved_jobs.html) – Review saved jobs
+
 ✅ Services (services.html) – Project and feature details
 
 🔮 Future Enhancements
