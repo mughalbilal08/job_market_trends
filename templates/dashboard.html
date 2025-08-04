@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dashboard</title>
+  <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}" />
+  <style>
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #121212;
+      color: #f0f0f0;
+      height: 100%;
+      overflow-x: hidden;
+    }
+    .search-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: -1;
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+    .sidebar {
+      background-color: #1e1e1e;
+      width: 250px;
+      height: 100vh;
+      position: fixed;
+      padding-top: 20px;
+      box-shadow: 2px 0 15px rgba(0,0,0,0.6);
+      transition: transform 0.3s ease;
+      z-index: 1000;
+    }
+    .sidebar.collapsed {
+      transform: translateX(-100%);
+    }
+    .sidebar ul {
+      list-style: none;
+      padding: 0;
+      margin-top: 100px;
+      width: 100%;
+    }
+    .sidebar ul li a {
+      color: #ccc;
+      text-decoration: none;
+      display: block;
+      padding: 12px 20px;
+      transition: background 0.3s, color 0.3s;
+    }
+    .sidebar ul li a:hover,
+    .sidebar ul li a.active {
+      background-color: #2c2c2c;
+      color: #ff9800;
+    }
+    .toggle-btn {
+      position: fixed;
+      top: 15px;
+      left: 15px;
+      background: none;
+      border: none;
+      color: #ff9800;
+      font-size: 28px;
+      cursor: pointer;
+      z-index: 1100;
+    }
+    .main-content {
+      margin-left: 250px;
+      padding: 40px;
+      transition: margin-left 0.3s ease;
+      position: relative;
+      z-index: 1;
+    }
+    .main-content.shifted {
+      margin-left: 0;
+    }
+    section {
+      margin-bottom: 50px;
+      display: none;
+      position: relative;
+    }
+    section.active {
+      display: block;
+    }
+    #home {
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: calc(100vh - 80px);
+      padding: 200px;
+      text-align: center;
+    }
+    #home h1 {
+      font-size: 36px;
+      margin: 0;
+      color: #ff9800;
+    }
+    h2 {
+      color: #ff9800;
+    }
+    input, select, button {
+      padding: 10px;
+      margin: 5px 10px 15px 0;
+      background-color: #1e1e1e;
+      border: 1px solid #ff9800;
+      color: #fff;
+      border-radius: 8px;
+    }
+    button {
+      background-color: #ff9800;
+      color: #121212;
+      font-weight: bold;
+      transition: background 0.3s;
+    }
+    button:hover {
+      background-color: #ffa733;
+    }
+    .job-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      justify-content: center; /* Center job cards horizontally */
+      max-width: 1200px; /* Limit width for large screens */
+      margin: 0 auto; /* Center the grid */
+    }
+    .job-card {
+      background-color: #1e1e1e;
+      padding: 15px;
+      border-radius: 10px;
+      width: 250px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+      transition: transform 0.2s ease;
+    }
+    .job-card:hover {
+      transform: translateY(-6px);
+    }
+    .job-card h3 {
+      color: #ff9800;
+    }
+    .job-card p {
+      color: #ccc;
+      margin: 5px 0;
+      word-break: break-word;
+    }
+    .job-card a {
+      color: #ff9800;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    .pagination {
+      margin-top: 20px;
+      display: flex;
+      justify-content: center; /* Center pagination links */
+      align-items: center;
+    }
+    .pagination a, .pagination span {
+      color: #ff9800;
+      margin: 0 10px;
+      text-decoration: none;
+    }
+    .pagination a:hover {
+      text-decoration: underline;
+    }
+    .no-jobs {
+      text-align: center; /* Center "No jobs found" message */
+      color: #ccc;
+    }
+    @media (max-width: 768px) {
+      .sidebar {
+        transform: translateX(-100%);
+      }
+      .sidebar.active {
+        transform: translateX(0);
+      }
+      .main-content {
+        margin-left: 0;
+        padding: 80px 20px 20px 20px;
+      }
+      .toggle-btn {
+        display: block;
+      }
+      .job-grid {
+        max-width: 100%; /* Full width on smaller screens */
+      }
+    }
+    .h {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 30px;
+      background: linear-gradient(
+        45deg,
+        rgba(30, 30, 30, 0.8),
+        rgba(44, 44, 44, 0.8),
+        rgba(255, 152, 0, 0.2),
+        rgba(44, 44, 44, 0.8),
+        rgba(30, 30, 30, 0.8)
+      );
+      background-size: 400%;
+      animation: gradientShift 15s ease infinite;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+      backdrop-filter: blur(5px); /* Subtle blur for frosted glass effect */
+      position: relative;
+      z-index: 2;
+    }
+    .h h1 {
+      font-size: 36px;
+      color: #ff9800;
+      margin: 0 0 15px;
+    }
+    .h .quote {
+      font-size: 24px;
+      color: #f0f0f0;
+      font-style: italic;
+      margin: 10px 0;
+    }
+    .h .quote-author {
+      font-size: 18px;
+      color: #ccc;
+      margin-top: 10px;
+    }
+    @keyframes gradientShift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    h2 {
+      color: #ff9800;
+    }
+  </style>
+</head>
+<body>
+  <button class="toggle-btn">☰</button>
+  <div class="sidebar" id="sidebar">
+    <ul>
+      <li><a href="{{ url_for('dashboard', page=1, active_section='home') }}" class="{% if active_section == 'home' %}active{% endif %}">Home</a></li>
+      <li><a href="{{ url_for('dashboard', page=1, active_section='search') }}" class="{% if active_section == 'search' %}active{% endif %}">Search Jobs</a></li>
+      <li><a href="{{ url_for('saved_jobs', page=1) }}" class="{% if active_section == 'saved' %}active{% endif %}">Saved Jobs</a></li>
+      <li><a href="{{ url_for('dashboard', page=1, active_section='trends') }}" class="{% if active_section == 'trends' %}active{% endif %}">Trends</a></li>
+      <li><a href="{{ url_for('logout') }}">Logout</a></li>
+    </ul>
+  </div>
+  <div class="main-content" id="mainContent">
+    <section id="home" class="{% if active_section == 'home' %}active{% endif %}">
+      <div class="h">
+        <h1>Welcome to Job Trends Hub!</h1>
+        <p class="quote">"Opportunities don't happen. You create them."</p>
+        <p class="quote-author">— Chris Grosser</p>
+      </div>
+    </section>
+    <section id="search" class="{% if active_section == 'search' %}active{% endif %}">
+      <canvas id="bg" class="search-canvas"></canvas>
+      {% include 'search_jobs.html' %}
+      {% if jobs %}
+        <div class="job-grid">
+          {% for job in jobs %}
+            <div class="job-card">
+              <h3>{{ job.title }}</h3>
+              <p><strong>Company:</strong> {{ job.company_name }}</p>
+              <p><strong>Location:</strong> {{ job.location }}</p>
+              <p><strong>Type:</strong> {{ 'Remote' if job.remote_allowed else 'Onsite' }}</p>
+              <p><strong>Experience:</strong> {{ job.experience_level }}</p>
+              <p><strong>Skills:</strong> {{ job.skills_desc }}</p>
+              {% if job.job_id not in saved_job_ids %}
+                <a href="{{ url_for('save_job', job_id=job.job_id) }}" class="save-job-btn" data-job-id="{{ job.job_id }}">Save Job</a>
+              {% else %}
+                <a href="{{ url_for('unsave_job', job_id=job.job_id) }}" class="unsave-job-btn" data-job-id="{{ job.job_id }}">Unsave Job</a>
+              {% endif %}
+            </div>
+          {% endfor %}
+        </div>
+        {% if pagination.has_prev or pagination.has_next %}
+          <div class="pagination">
+            {% if pagination.has_prev %}<a href="{{ url_for('dashboard', page=pagination.prev_num, active_section='search') }}">Previous</a>{% endif %}
+            <span>Page {{ page }} of {{ pagination.pages }}</span>
+            {% if pagination.has_next %}<a href="{{ url_for('dashboard', page=pagination.next_num, active_section='search') }}">Next</a>{% endif %}
+          </div>
+        {% endif %}
+      {% else %}
+        <p class="no-jobs">No jobs found.</p>
+      {% endif %}
+    </section>
+    <section id="saved" class="{% if active_section == 'saved' %}active{% endif %}">
+      <h2>Saved Jobs</h2>
+      {% if saved_jobs %}
+      {% endif %}
+    </section>
+    <section id="trends" class="{% if active_section == 'trends' %}active{% endif %}">
+      {% include 'trends.html' %}
+    </section>
+  </div>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      console.log('Dashboard loaded, active_section: {{ active_section }}');
+      const toggleBtn = document.querySelector('.toggle-btn');
+      const sidebar = document.getElementById('sidebar');
+      const mainContent = document.getElementById('mainContent');
+      const links = document.querySelectorAll('.sidebar ul li a');
+      const sections = document.querySelectorAll('.main-content section');
+      const saveButtons = document.querySelectorAll('.save-job-btn');
+      const unsaveButtons = document.querySelectorAll('.unsave-job-btn');
+
+      // Check and log element availability
+      if (!toggleBtn) console.error('Toggle button not found');
+      if (!sidebar) console.error('Sidebar not found');
+      if (!mainContent) console.error('Main content not found');
+
+      // Function to initialize sidebar state
+      function initializeSidebar() {
+        if (window.innerWidth > 768) {
+          sidebar.classList.remove('collapsed');
+          mainContent.classList.remove('shifted');
+        } else {
+          sidebar.classList.add('collapsed');
+          mainContent.classList.add('shifted');
+        }
+      }
+
+      // Initialize sidebar on load
+      initializeSidebar();
+
+      // Toggle sidebar
+      if (toggleBtn) {
+        toggleBtn.addEventListener('click', () => {
+          sidebar.classList.toggle('collapsed');
+          mainContent.classList.toggle('shifted');
+          console.log('Sidebar toggled, collapsed:', sidebar.classList.contains('collapsed'));
+        });
+      }
+
+      // Handle navigation and section activation
+      links.forEach(link => {
+        link.addEventListener('click', (e) => {
+          e.preventDefault();
+          const href = link.getAttribute('href');
+          if (href.includes('/saved_jobs') || href.includes('/logout')) {
+            window.location.href = href;
+          } else {
+            sections.forEach(section => section.classList.remove('active'));
+            const sectionId = href.split('active_section=')[1];
+            if (sectionId) {
+              document.getElementById(sectionId).classList.add('active');
+              links.forEach(l => l.classList.remove('active'));
+              link.classList.add('active');
+              console.log('Navigated to section:', sectionId);
+            }
+          }
+          initializeSidebar();
+        });
+      });
+
+      // Handle save job action
+      saveButtons.forEach(button => {
+        button.addEventListener('click', (e) => {
+          e.preventDefault();
+          const jobId = button.getAttribute('data-job-id');
+          console.log('Saving job:', jobId);
+          fetch(button.getAttribute('href'), {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          })
+            .then(response => response.json())
+            .then(data => {
+              console.log('Save response:', data);
+              if (data.success) {
+                alert(data.message);
+                window.location.href = '{{ url_for("saved_jobs", page=1) }}';
+              } else {
+                alert(data.message);
+              }
+            })
+            .catch(error => {
+              console.error('Save error:', error);
+              alert('Error saving job. Please try again.');
+            });
+        });
+      });
+
+      // Handle unsave job action
+      unsaveButtons.forEach(button => {
+        button.addEventListener('click', (e) => {
+          e.preventDefault();
+          const jobId = button.getAttribute('data-job-id');
+          console.log('Unsaving job:', jobId);
+          fetch(button.getAttribute('href'), {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          })
+            .then(response => response.json())
+            .then(data => {
+              console.log('Unsave response:', data);
+              if (data.success) {
+                alert(data.message);
+                window.location.reload();
+              } else {
+                alert(data.message);
+              }
+            })
+            .catch(error => {
+              console.error('Unsave error:', error);
+              alert('Error unsaving job. Please try again.');
+            });
+        });
+      });
+
+      // Set initial section
+      const initialSection = document.getElementById('{{ active_section }}');
+      if (initialSection) {
+        sections.forEach(section => section.classList.remove('active'));
+        initialSection.classList.add('active');
+        const activeLink = document.querySelector(`.sidebar ul li a[href*="{{ active_section }}"]`) || document.querySelector(`.sidebar ul li a[href*="/saved_jobs"]`);
+        if (activeLink) {
+          links.forEach(l => l.classList.remove('active'));
+          activeLink.classList.add('active');
+          console.log('Active section set:', '{{ active_section }}');
+        }
+      }
+
+      // Window resize event for sidebar adjustment
+      window.addEventListener('resize', () => {
+        initializeSidebar();
+      });
+    });
+  </script>
+</body>
+</html>

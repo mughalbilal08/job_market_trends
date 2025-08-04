@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Jobs</title>
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <style>
+        * { box-sizing: border-box; }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #121212;
+            color: #f0f0f0;
+            height: 100%;
+            overflow-x: hidden;
+        }
+
+        canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: -1;
+        }
+
+        .main-content {
+            margin-left: 250px;
+            padding: 40px;
+            position: relative;
+            z-index: 1;
+        }
+
+        h2 {
+            color: #ff9800;
+        }
+
+        input, select, button {
+            padding: 10px;
+            margin: 5px 10px 15px 0;
+            background-color: #1e1e1e;
+            border: 1px solid #ff9800;
+            color: #fff;
+            border-radius: 8px;
+        }
+
+        button {
+            background-color: #ff9800;
+            color: #121212;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background-color: #ffa733;
+        }
+
+        .job-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .job-card {
+            background-color: #1e1e1e;
+            padding: 20px;
+            border-radius: 15px;
+            width: 250px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            transition: transform 0.3s ease;
+        }
+
+        .job-card:hover {
+            transform: translateY(-6px);
+        }
+
+        .job-card h3 {
+            color: #ff9800;
+        }
+
+        .job-card p {
+            color: #ccc;
+            margin: 5px 0;
+            word-break: break-word; /* Ensure long skills wrap */
+        }
+
+        .job-card a {
+            color: #ff9800;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                margin-left: 0;
+                padding: 80px 20px 20px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="bg"></canvas>
+    <div class="main-content">
+        <h2>Search Jobs</h2>
+        <form method="POST">
+            <input type="hidden" name="active_section" value="search">
+            <input type="text" name="skill" placeholder="Skill (e.g., Python)">
+            <input type="text" name="location" placeholder="Location (e.g., Pakistan)">
+            <select name="job_type">
+                <option value="">All Job Types</option>
+                <option value="remote">Remote</option>
+                <option value="onsite">Onsite</option>
+            </select>
+            <select name="experience">
+                <option value="">All Experience Levels</option>
+                <option value="entry level">Entry level</option>
+                <option value="associate">Associate</option>
+                <option value="not specified">Not specified</option>
+            </select>
+            <button type="submit">Search</button>
+        </form>
+        <div class="job-grid">
+            {% if jobs and not no_jobs %}
+                {% for job in jobs %}
+                <div class="job-card">
+                    <h3>{{ job.title }}</h3>
+                    <p>{{ job.company_name }} - {{ job.location }}</p>
+                    <p>{{ 'Remote' if job.remote_allowed else 'Onsite' }}</p>
+                    <p>{{ job.experience_level }}</p>
+                    <p><strong>Skills:</strong> {{ job.skills_desc }}</p>
+                    {% if job.job_id not in saved_job_ids %}
+                    <a href="{{ url_for('save_job', job_id=job.job_id) }}">Save Job</a>
+                    {% else %}
+                    <p><strong>Saved</strong></p>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            {% elif no_jobs %}
+                <p>No jobs found matching your criteria.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+    <script>
+        const canvas = document.getElementById("bg");
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ canvas, alpha: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        camera.position.z = 5;
+
+        const particles = new THREE.BufferGeometry();
+        const particleCount = 800;
+        const positions = new Float32Array(particleCount * 3);
+
+        for (let i = 0; i < particleCount * 3; i++) {
+            positions[i] = (Math.random() - 0.5) * 20;
+        }
+
+        particles.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+
+        const material = new THREE.PointsMaterial({
+            color: 0xff9800,
+            size: 0.05,
+            transparent: true,
+            opacity: 0.6
+        });
+
+        const pointCloud = new THREE.Points(particles, material);
+        scene.add(pointCloud);
+
+        function animate() {
+            requestAnimationFrame(animate);
+            pointCloud.rotation.y += 0.001;
+            pointCloud.rotation.x += 0.0005;
+            renderer.render(scene, camera);
+        }
+
+        animate();
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>
+</html>

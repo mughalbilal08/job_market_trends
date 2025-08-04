@@ -1,0 +1,365 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Saved Jobs</title>
+  <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
+  <style>
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #121212;
+      color: #f0f0f0;
+      height: 100%;
+      overflow-x: hidden;
+    }
+    canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: -1;
+      width: 100%;
+      height: 100%;
+    }
+    .sidebar {
+      background-color: #1e1e1e;
+      width: 250px;
+      height: 100vh;
+      position: fixed;
+      padding-top: 20px;
+      box-shadow: 2px 0 15px rgba(0,0,0,0.6);
+      transition: transform 0.3s ease;
+      z-index: 1000;
+    }
+    .sidebar.collapsed {
+      transform: translateX(-100%);
+    }
+    .sidebar ul {
+      list-style: none;
+      padding: 0;
+      margin-top: 100px;
+      width: 100%;
+    }
+    .sidebar ul li a {
+      color: #ccc;
+      text-decoration: none;
+      display: block;
+      padding: 12px 20px;
+      transition: background 0.3s, color 0.3s;
+    }
+    .sidebar ul li a:hover,
+    .sidebar ul li a.active {
+      background-color: #2c2c2c;
+      color: #ff9800;
+    }
+    .toggle-btn {
+      position: fixed;
+      top: 15px;
+      left: 15px;
+      background: none;
+      border: none;
+      color: #ff9800;
+      font-size: 28px;
+      cursor: pointer;
+      z-index: 1100;
+    }
+    .main-content {
+      margin-left: 250px;
+      padding: 40px;
+      transition: margin-left 0.3s ease;
+      position: relative;
+      z-index: 1;
+    }
+    .main-content.shifted {
+      margin-left: 0;
+    }
+    .saved-jobs-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .saved-jobs-container h2 {
+      text-align: center;
+      color: #ff9800;
+      margin-bottom: 20px;
+    }
+    .saved-job-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      justify-content: center;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .saved-job-card {
+      background-color: #1e1e1e;
+      padding: 15px;
+      border-radius: 10px;
+      width: 250px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+      transition: transform 0.2s ease;
+    }
+    .saved-job-card:hover {
+      transform: translateY(-6px);
+    }
+    .saved-job-card h3 {
+      color: #ff9800;
+      margin: 0 0 10px;
+    }
+    .saved-job-card p {
+      color: #ccc;
+      margin: 5px 0;
+      word-break: break-word;
+    }
+    .saved-job-card a {
+      display: inline-block;
+      padding: 8px 16px;
+      background-color: #ff9800;
+      color: #121212;
+      font-weight: bold;
+      font-size: 14px;
+      border: 1px solid #ff9800;
+      border-radius: 8px;
+      text-decoration: none;
+      transition: background 0.3s;
+      margin-top: 10px;
+      text-align: center;
+    }
+    .saved-job-card a:hover {
+      background-color: #ffa733;
+    }
+    .saved-pagination {
+      margin-top: 20px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .saved-pagination a, .saved-pagination span {
+      color: #ff9800;
+      margin: 0 10px;
+      text-decoration: none;
+    }
+    .saved-pagination a:hover {
+      text-decoration: underline;
+    }
+    .no-saved-jobs {
+      text-align: center;
+      color: #ccc;
+      margin-top: 20px;
+    }
+    @media (max-width: 768px) {
+      .sidebar {
+        transform: translateX(-100%);
+      }
+      .sidebar.active {
+        transform: translateX(0);
+      }
+      .main-content {
+        margin-left: 0;
+        padding: 80px 20px 20px 20px;
+      }
+      .toggle-btn {
+        display: block;
+      }
+      .saved-job-grid {
+        max-width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="bg"></canvas>
+  <button class="toggle-btn">☰</button>
+  <div class="sidebar" id="sidebar">
+    <ul>
+      <li><a href="{{ url_for('dashboard', page=1, active_section='home') }}">Home</a></li>
+      <li><a href="{{ url_for('dashboard', page=1, active_section='search') }}">Search Jobs</a></li>
+      <li><a href="{{ url_for('saved_jobs', page=1) }}" class="active">Saved Jobs</a></li>
+      <li><a href="{{ url_for('dashboard', page=1, active_section='trends') }}">Trends</a></li>
+      <li><a href="{{ url_for('logout') }}">Logout</a></li>
+    </ul>
+  </div>
+  <div class="main-content" id="mainContent">
+    <div class="saved-jobs-container">
+      <h2>Saved Jobs</h2>
+      {% if saved_jobs %}
+        <div class="saved-job-grid">
+          {% for job in saved_jobs %}
+            <div class="saved-job-card">
+              <h3>{{ job.title }}</h3>
+              <p><strong>Company:</strong> {{ job.company_name }}</p>
+              <p><strong>Location:</strong> {{ job.location }}</p>
+              <p><strong>Type:</strong> {{ 'Remote' if job.remote_allowed else 'Onsite' }}</p>
+              <p><strong>Experience:</strong> {{ job.experience_level }}</p>
+              <p><strong>Skills:</strong> {{ job.skills_desc }}</p>
+              <a href="{{ url_for('unsave_job', job_id=job.job_id) }}" class="unsave-job-btn" data-job-id="{{ job.job_id }}">Unsave Job</a>
+            </div>
+          {% endfor %}
+        </div>
+        {% if pagination.has_prev or pagination.has_next %}
+          <div class="saved-pagination">
+            {% if pagination.has_prev %}
+              <a href="{{ url_for('saved_jobs', page=pagination.prev_num) }}">Previous</a>
+            {% endif %}
+            {% for p in pagination.iter_pages() %}
+              {% if p %}
+                <a href="{{ url_for('saved_jobs', page=p) }}" {% if p == page %}style="font-weight: bold;"{% endif %}>{{ p }}</a>
+              {% else %}
+                <span>...</span>
+              {% endif %}
+            {% endfor %}
+            {% if pagination.has_next %}
+              <a href="{{ url_for('saved_jobs', page=pagination.next_num) }}">Next</a>
+            {% endif %}
+          </div>
+        {% endif %}
+      {% else %}
+        <p class="no-saved-jobs">No saved jobs found.</p>
+      {% endif %}
+    </div>
+  </div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      console.log('Saved Jobs page loaded');
+      const toggleBtn = document.querySelector('.toggle-btn');
+      const sidebar = document.getElementById('sidebar');
+      const mainContent = document.getElementById('mainContent');
+      const unsaveButtons = document.querySelectorAll('.unsave-job-btn');
+
+      // Check and log element availability
+      if (!toggleBtn) console.error('Toggle button not found');
+      if (!sidebar) console.error('Sidebar not found');
+      if (!mainContent) console.error('Main content not found');
+
+      // Function to initialize sidebar state
+      function initializeSidebar() {
+        if (window.innerWidth > 768) {
+          sidebar.classList.remove('collapsed');
+          mainContent.classList.remove('shifted');
+        } else {
+          sidebar.classList.add('collapsed');
+          mainContent.classList.add('shifted');
+        }
+      }
+
+      // Initialize sidebar on load
+      initializeSidebar();
+
+      // Toggle sidebar
+      if (toggleBtn) {
+        toggleBtn.addEventListener('click', () => {
+          sidebar.classList.toggle('collapsed');
+          mainContent.classList.toggle('shifted');
+          console.log('Sidebar toggled, collapsed:', sidebar.classList.contains('collapsed'));
+        });
+      }
+
+      // Handle unsave job action
+      unsaveButtons.forEach(button => {
+        button.addEventListener('click', (e) => {
+          e.preventDefault();
+          const jobId = button.getAttribute('data-job-id');
+          console.log('Unsaving job:', jobId);
+          fetch(button.getAttribute('href'), {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          })
+            .then(response => response.json())
+            .then(data => {
+              console.log('Unsave response:', data);
+              if (data.success) {
+                alert(data.message);
+                window.location.reload();
+              } else {
+                alert(data.message);
+              }
+            })
+            .catch(error => {
+              console.error('Unsave error:', error);
+              alert('Error unsaving job. Please try again.');
+            });
+        });
+      });
+
+      // Initialize Three.js with dot effect
+      try {
+        const canvas = document.getElementById('bg');
+        if (!canvas) {
+          console.error('Canvas element not found');
+          return;
+        }
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ canvas, alpha: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setClearColor(0x000000, 0); // Transparent background
+        camera.position.z = 5;
+
+        const particles = new THREE.BufferGeometry();
+        const particleCount = 300;
+        const positions = new Float32Array(particleCount * 3);
+        const velocities = new Float32Array(particleCount * 3);
+
+        for (let i = 0; i < particleCount * 3; i += 3) {
+          positions[i] = (Math.random() - 0.5) * 20;
+          positions[i + 1] = (Math.random() - 0.5) * 20;
+          positions[i + 2] = (Math.random() - 0.5) * 20;
+          velocities[i] = (Math.random() - 0.5) * 0.05;
+          velocities[i + 1] = (Math.random() - 0.5) * 0.05;
+          velocities[i + 2] = (Math.random() - 0.5) * 0.05;
+        }
+
+        particles.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+
+        const material = new THREE.PointsMaterial({
+          color: 0xff9800,
+          size: 0.1,
+          transparent: true,
+          opacity: 0.8
+        });
+
+        const pointCloud = new THREE.Points(particles, material);
+        scene.add(pointCloud);
+
+        function animate() {
+          requestAnimationFrame(animate);
+          const positions = pointCloud.geometry.attributes.position.array;
+          for (let i = 0; i < particleCount * 3; i += 3) {
+            positions[i] += velocities[i];
+            positions[i + 1] += velocities[i + 1];
+            positions[i + 2] += velocities[i + 2];
+
+            if (positions[i] > 10 || positions[i] < -10) velocities[i] *= -1;
+            if (positions[i + 1] > 10 || positions[i + 1] < -10) velocities[i + 1] *= -1;
+            if (positions[i + 2] > 10 || positions[i + 2] < -10) velocities[i + 2] *= -1;
+          }
+          pointCloud.geometry.attributes.position.needsUpdate = true;
+          renderer.render(scene, camera);
+        }
+
+        animate();
+
+        window.addEventListener('resize', () => {
+          camera.aspect = window.innerWidth / window.innerHeight;
+          camera.updateProjectionMatrix();
+          renderer.setSize(window.innerWidth, window.innerHeight);
+          initializeSidebar();
+        });
+      } catch (e) {
+        console.error('Three.js initialization failed:', e);
+      }
+    });
+  </script>
+</body>
+</html>

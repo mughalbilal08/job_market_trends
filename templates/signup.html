@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up</title>
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2e2e2e 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Roboto', Arial, sans-serif;
+        }
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: -1;
+        }
+        .signup-container {
+            background-color: #242424;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            z-index: 1;
+            width: 100%;
+            max-width: 400px;
+            animation: fadeIn 1s ease-out;
+        }
+       .back-button {
+    position: absolute; /* <-- added */
+    top: 20px;           /* <-- added */
+    left: 20px;          /* <-- added */
+    display: block;
+    margin-bottom: 20px;
+    padding: 10px 20px;
+    color: #d3d3d3;
+    background-color: #242424;
+    border: 1px solid #4a90e2;
+    border-radius: 5px;
+    text-align: center;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    text-decoration: none;
+}
+
+        .back-button:hover {
+            background-color: #4a90e2;
+            color: #ffffff;
+        }
+        .signup-container h2 {
+            color: #d3d3d3;
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 28px;
+        }
+        .signup-container input {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            color: #b0b0b0;
+            background-color: #2e2e2e;
+            border: 1px solid #4a90e2;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+        .signup-container button {
+            width: 100%;
+            padding: 12px;
+            color: #d3d3d3;
+            background-color: #242424;
+            border: 1px solid #4a90e2;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        .signup-container button:hover {
+            background-color: #4a90e2;
+            color: #ffffff;
+        }
+        .flash {
+            color: #ff4444;
+            text-align: center;
+            margin-bottom: 15px;
+            animation: flashFade 1s ease-out;
+        }
+        @keyframes fadeIn {
+            0% { opacity: 0; transform: translateY(20px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes flashFade {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="bg"></canvas>
+    <a href="{{ url_for('index') }}" class="back-button">Back</a>
+    <div class="signup-container">
+        <h2>Sign Up</h2>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="flash">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        <form method="POST">
+            <input type="email" name="email" placeholder="Email" required>
+            <input type="password" name="password" placeholder="Password" required>
+            <button type="submit">Sign Up</button>
+        </form>
+    </div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+<script>
+    const canvas = document.getElementById("bg");
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({ canvas, alpha: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    camera.position.z = 5;
+
+    // Create flowing particles
+    const particles = new THREE.BufferGeometry();
+    const particleCount = 800;
+    const positions = new Float32Array(particleCount * 3);
+
+    for (let i = 0; i < particleCount * 3; i++) {
+        positions[i] = (Math.random() - 0.5) * 20;
+    }
+
+    particles.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+
+    const material = new THREE.PointsMaterial({
+        color: 0x4a90e2,
+        size: 0.05,
+        transparent: true,
+        opacity: 0.6
+    });
+
+    const pointCloud = new THREE.Points(particles, material);
+    scene.add(pointCloud);
+
+    function animate() {
+        requestAnimationFrame(animate);
+        pointCloud.rotation.y += 0.001;
+        pointCloud.rotation.x += 0.0005;
+        renderer.render(scene, camera);
+    }
+
+    animate();
+
+    window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+</script>
+
+</body>
+</html>

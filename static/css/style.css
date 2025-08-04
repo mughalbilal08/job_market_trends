@@ -1,0 +1,122 @@
+body {
+    font-family: 'Proxima Nova', sans-serif;
+    margin: 0;
+    padding: 0;
+    background: #f4f4f4;
+}
+header {
+    background: #4b0082;
+    color: white;
+    padding: 1em;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.logo {
+    font-size: 1.5em;
+}
+nav ul {
+    list-style: none;
+    display: flex;
+    gap: 1em;
+}
+nav a {
+    color: white;
+    text-decoration: none;
+}
+.hero {
+    text-align: center;
+    padding: 2em;
+    background: #f0e68c;
+}
+.hero h1 {
+    animation: fadeIn 1s ease-in;
+}
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+.job-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 1em;
+    padding: 1em;
+}
+.job-card {
+    background: white;
+    padding: 1em;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+.auth {
+    max-width: 400px;
+    margin: 2em auto;
+    padding: 1em;
+    background: white;
+    border-radius: 5px;
+}
+.auth form {
+    display: flex;
+    flex-direction: column;
+    gap: 1em;
+}
+.auth input, .auth button {
+    padding: 0.5em;
+}
+.error {
+    color: red;
+}
+.success {
+    color: green;
+}
+.sidebar {
+    width: 200px;
+    background: #4b0082;
+    color: white;
+    position: fixed;
+    height: 100%;
+    padding: 1em;
+}
+.sidebar ul {
+    list-style: none;
+    padding: 0;
+}
+.sidebar a {
+    color: white;
+    text-decoration: none;
+    display: block;
+    padding: 0.5em;
+}
+.toggle-btn {
+    display: none;
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.5em;
+}
+.main-content {
+    margin-left: 220px;
+    padding: 1em;
+}
+section {
+    margin-bottom: 2em;
+}
+@media (max-width: 768px) {
+    .sidebar {
+        width: 100%;
+        height: auto;
+        position: relative;
+    }
+    .toggle-btn {
+        display: block;
+    }
+    .sidebar ul {
+        display: none;
+    }
+    .sidebar.active ul {
+        display: block;
+    }
+    .main-content {
+        margin-left: 0;
+    }
+}

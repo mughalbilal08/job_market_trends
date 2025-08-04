@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Job Market Trends</title>
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2e2e2e 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            font-family: 'Roboto', Arial, sans-serif; /* Attractive font with fallback */
+        }
+        .navbar {
+            background-color: #242424;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+            z-index: 1;
+            position: relative;
+            animation: fadeIn 1s ease-out;
+        }
+        .app-name {
+            color: #d3d3d3;
+            font-size: 24px;
+            font-weight: 600;
+            padding-left: 20px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .navbar-buttons { display: flex; }
+        .navbar button {
+            background-color: #242424;
+            color: #d3d3d3;
+            border: 1px solid #4a90e2;
+            padding: 10px 25px;
+            margin-left: 10px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        .navbar button:hover {
+            background-color: #4a90e2;
+            color: #ffffff;
+            border-color: #4a90e2;
+        }
+        .quote-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-grow: 1;
+            text-align: center;
+            z-index: 1;
+        }
+        .quote {
+            font-size: 24px;
+            color: #b0b0b0;
+            opacity: 0;
+            animation: fadeInScale 2s ease-out 0.5s forwards, bounce 1s ease-out 2.5s 1; /* Removed fadeOut */
+            line-height: 1.6;
+        }
+        .quote span { display: block; }
+        .footer {
+            background-color: #1c1c1c;
+            color: #b0b0b0;
+            text-align: center;
+            padding: 10px 20px;
+            z-index: 1;
+            width: 100%;
+            animation: fadeIn 1s ease-out, pulse 2s infinite ease-in-out;
+            position: relative;
+            overflow: hidden;
+        }
+        .footer::before {
+            content: '';
+            position: absolute;
+            top: -20px;
+            left: 0;
+            width: 100%;
+            height: 20px;
+            background: inherit;
+            border-radius: 50% 50% 0 0; /* Creates a curved top edge */
+            z-index: -1;
+        }
+        .footer p {
+            position: relative;
+            z-index: 1;
+        }
+        @keyframes fadeIn {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+        @keyframes fadeInScale {
+            0% { opacity: 0; transform: scale(0.9) translateY(20px); }
+            100% { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.9; }
+            50% { transform: scale(1.05); opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <div class="app-name">Job Trends Hub</div>
+        <div class="navbar-buttons">
+            <button onclick="location.href='{{ url_for('index') }}'">Home</button>
+            <button onclick="location.href='{{ url_for('login') }}'">Sign In</button>
+            <button onclick="location.href='{{ url_for('signup') }}'">Sign Up</button>
+            <button onclick="location.href='{{ url_for('services') }}'">Services</button>
+        </div>
+    </div>
+    <div class="quote-container">
+        <div class="quote">
+            <span>Empower your career journey with us.</span>
+            <span>Opportunities that transform lives.</span>
+        </div>
+    </div>
+    <div class="footer">
+        <p>© 2025 Job Trends Hub | All Rights Reserved</p>
+    </div>
+</body>
+</html>

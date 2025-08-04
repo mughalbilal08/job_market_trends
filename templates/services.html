@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Services</title>
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon" />
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #121212, #1e1e1e);
+            color: #cccccc;
+            min-height: 100vh;
+        }
+
+        .navbar {
+            background-color: #1f1f1f;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .app-name {
+            font-size: 26px;
+            color: #4a90e2;
+            font-weight: bold;
+            letter-spacing: 1.5px;
+        }
+
+        .navbar-buttons {
+            display: flex;
+            gap: 12px;
+        }
+
+        .navbar button {
+            background-color: transparent;
+            border: 1px solid #4a90e2;
+            color: #d0d0d0;
+            padding: 8px 18px;
+            border-radius: 5px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .navbar button:hover {
+            background-color: #4a90e2;
+            color: #ffffff;
+        }
+
+.content {
+    padding: 190px 30px 60px; /* 👈 increased top padding from 60px to 120px */
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 30px;
+    max-width: 1200px;
+    margin: auto;
+}
+
+        .card {
+
+            background: linear-gradient(145deg, #2a2a2a, #1c1c1c);
+            padding: 25px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .card h3 {
+            font-size: 22px;
+            margin-bottom: 15px;
+            color: #ffffff;
+        }
+
+        .card p {
+            font-size: 16px;
+            line-height: 1.6;
+            color: #cccccc;
+        }
+
+        @media (max-width: 500px) {
+            .navbar-buttons {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <div class="app-name">Job Trends Hub</div>
+        <div class="navbar-buttons">
+            <button onclick="location.href='{{ url_for('index') }}'">Home</button>
+            <button onclick="location.href='{{ url_for('login') }}'">Sign In</button>
+            <button onclick="location.href='{{ url_for('signup') }}'">Sign Up</button>
+            <button onclick="location.href='{{ url_for('index') }}'">Services</button>
+        </div>
+    </div>
+
+    <div class="content">
+        <div class="card">
+            <h3>Job Search Engine</h3>
+            <p>Discover tailored job opportunities worldwide with our advanced search tools and intelligent filters designed to match your goals.</p>
+        </div>
+        <div class="card">
+            <h3>Career Coaching</h3>
+            <p>Get expert guidance to build your career, navigate interviews, and develop professional skills with personalized coaching.</p>
+        </div>
+        <div class="card">
+            <h3>Resume Builder</h3>
+            <p>Create a standout resume using modern templates and intelligent formatting tools that catch recruiters' eyes instantly.</p>
+        </div>
+    </div>
+</body>
+</html>

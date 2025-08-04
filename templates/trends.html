@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trends</title>
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <style>
+        * { box-sizing: border-box; }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #121212;
+            color: #f0f0f0;
+            height: 100%;
+            overflow-x: hidden;
+        }
+
+        .trends-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center; /* Changed from flex-end to center */
+            justify-content: flex-start;
+            width: 100%;
+            margin-top: 40px;
+            padding-right: 0; /* Removed right padding since centering */
+        }
+
+        .chart-container {
+            width: 90%;
+            max-width: 1000px;
+            margin-top= 300px;
+        }
+
+        #chartCanvas {
+            width: 100%;
+            height: 600px;
+            background-color: #1e1e1e;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+
+        h2 {
+            color: #ff9800;
+        }
+
+        button {
+            padding: 10px;
+            margin: 5px 10px 15px 0;
+            background-color: #ff9800;
+            border: none;
+            color: #121212;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background-color: #ffa733;
+        }
+
+        .chart-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            justify-content: center; /* Centered buttons horizontally */
+        }
+
+        #noDataMessage {
+            display: none;
+            color: #ccc;
+            text-align: center;
+        }
+
+        @media (max-width: 768px) {
+            .trends-wrapper {
+                align-items: center;
+                padding: 0 20px; /* Added padding for mobile */
+            }
+            #chartCanvas {
+                height: 400px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="trends-wrapper">
+    <h2>Job Market Trends</h2>
+    <div class="chart-buttons">
+        <button id="locationSkillsBtn">Location Skills</button>
+    </div>
+    <div class="chart-container">
+        <canvas id="chartCanvas"></canvas>
+         <!-- 🖼️ Add image below the chart -->
+    <img src="{{ url_for('static', filename='images/PBi.png') }}" alt="Report Screenshot" style="width:100%; max-width:900px; margin-top: 40px; border-radius: 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.4);">
+    </div>
+</div>
+<p id="noDataMessage">No data available or error occurred. Check console for details.</p>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const canvas = document.createElement('canvas');
+        canvas.id = 'bg';
+        canvas.style.position = 'fixed';
+        canvas.style.top = '0';
+        canvas.style.left = '0';
+        canvas.style.zIndex = '-1';
+        document.body.appendChild(canvas);
+
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ canvas, alpha: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        camera.position.z = 5;
+
+        const particles = new THREE.BufferGeometry();
+        const particleCount = 800;
+        const positions = new Float32Array(particleCount * 3);
+        for (let i = 0; i < particleCount * 3; i++) {
+            positions[i] = (Math.random() - 0.5) * 20;
+        }
+        particles.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        const material = new THREE.PointsMaterial({
+            color: 0xff9800,
+            size: 0.05,
+            transparent: true,
+            opacity: 0.6
+        });
+        const pointCloud = new THREE.Points(particles, material);
+        scene.add(pointCloud);
+
+        function animate() {
+            requestAnimationFrame(animate);
+            pointCloud.rotation.y += 0.001;
+            pointCloud.rotation.x += 0.0005;
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        let chart;
+        const ctx = document.getElementById('chartCanvas').getContext('2d');
+        const noDataMessage = document.getElementById('noDataMessage');
+
+        function updateChart(dataset) {
+            if (chart) chart.destroy();
+            document.getElementById('chartCanvas').style.display = 'block';
+            noDataMessage.style.display = 'none';
+
+            let labels = [];
+            let data = [];
+            let title = '';
+
+            fetch(`/data/${dataset}.csv`)
+                .then(response => {
+                    if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+                    return response.text();
+                })
+                .then(csv => {
+                    const rows = csv.split('\n').slice(1);
+                    if (rows.length <= 1 || rows[0].trim() === '') {
+                        throw new Error('No data available');
+                    }
+                    rows.forEach(row => {
+                        if (row.trim()) {
+                            const [location, skill, count] = row.split(',').map(item => item.trim());
+                            if (location && skill && count) {
+                                if (dataset === 'location_skills') {
+                                    labels.push(`${location.replace(/"/g, '')} - ${skill}`);
+                                    data.push(parseInt(count) || 0);
+                                } else {
+                                    labels.push(skill);
+                                    data.push(parseInt(count) || 0);
+                                }
+                            }
+                        }
+                    });
+                    if (labels.length === 0) throw new Error('No valid data parsed');
+                    createChart(dataset, labels, data);
+                })
+                .catch(error => {
+                    console.error(`Error loading ${dataset}.csv:`, error);
+                    document.getElementById('chartCanvas').style.display = 'none';
+                    noDataMessage.style.display = 'block';
+                });
+        }
+
+        function createChart(dataset, labels, data) {
+            let title = '';
+            if (dataset === 'location_skills') title = 'Preferred Skills by Location';
+            else if (dataset === 'onsite_jobs') title = 'Onsite Jobs by Skill';
+            else if (dataset === 'remote_jobs') title = 'Remote Jobs by Skill';
+
+            chart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: title,
+                        data: data,
+                        backgroundColor: 'rgba(255, 152, 0, 0.6)',
+                        borderColor: 'rgba(255, 152, 0, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Job Count'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: dataset === 'location_skills' ? 'Location - Skill' : 'Skill'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: '#f0f0f0'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        document.getElementById('locationSkillsBtn').addEventListener('click', () => updateChart('location_skills'));
+        document.getElementById('onsiteJobsBtn').addEventListener('click', () => updateChart('onsite_jobs'));
+        document.getElementById('remoteJobsBtn').addEventListener('click', () => updateChart('remote_jobs'));
+
+        updateChart('location_skills');
+    });
+</script>
+</body>
+</html>

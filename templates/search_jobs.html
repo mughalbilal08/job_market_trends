@@ -1,0 +1,180 @@
+<style>
+  .search-form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+  .search-form h2 {
+ font-size: 30px;
+    text-align: center;
+    color: #ff9800;
+  }
+  .search-form div {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: 400px;
+    margin-bottom: 15px;
+  }
+  .search-form label {
+    color: #f0f0f0;
+    margin-bottom: 1px;
+  }
+  .search-form input,
+  .search-form select,
+  .search-form button {
+    padding: 15px;
+    background-color: #1e1e1e;
+    border: 1px solid #ff9800;
+    color: #fff;
+    border-radius: 8px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  .search-form button {
+    padding: 8px 16px; /* Reduced padding for smaller button */
+    background-color: #ff9800;
+    color: #121212;
+    font-weight: bold;
+    font-size: 14px; /* Smaller font size */
+    border: 1px solid #ff9800;
+    border-radius: 8px;
+    width: auto; /* Button width fits content */
+    max-width: 150px; /* Limit maximum width */
+    align-self: center; /* Center button within flex container */
+    transition: background 0.3s;
+    cursor: pointer;
+  }
+  .search-form button:hover {
+    background-color: #ffa733;
+  }
+  .search-form #debugInfo {
+    color: #ccc;
+    text-align: center;
+    margin-top: 10px;
+  }
+</style>
+
+<form method="POST" id="searchForm" action="{{ url_for('dashboard', page=1) }}" class="search-form">
+  <h2>Search Jobs</h2>
+  <div>
+    <label for="skill">Skill:</label>
+    <input type="text" id="skill" name="skill" placeholder="e.g., Python">
+  </div>
+  <div>
+    <label for="location">Location:</label>
+    <input type="text" id="location" name="location" placeholder="e.g., New York">
+  </div>
+  <div>
+    <label for="job_type">Job Type:</label>
+    <select id="job_type" name="job_type">
+      <option value="">Any</option>
+      <option value="remote">Remote</option>
+      <option value="onsite">Onsite</option>
+    </select>
+  </div>
+  <div>
+    <label for="experience">Experience:</label>
+    <select id="experience" name="experience">
+      <option value="all experience levels">All Experience Levels</option>
+      <option value="Entry Level">Entry Level</option>
+      <option value="Mid Level">Mid Level</option>
+      <option value="Senior Level">Senior Level</option>
+    </select>
+  </div>
+  <button type="submit">Search</button>
+</form>
+<script src="https://unpkg.com/three@0.134.0/build/three.min.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const searchForm = document.getElementById('searchForm');
+    if (searchForm) {
+      searchForm.addEventListener('submit', (event) => {
+        // event.preventDefault(); // Keep commented to allow submission
+        const formData = new FormData(searchForm);
+        console.log('Form submitted with data (attempt #' + (searchForm.dataset.submitCount || 0) + '):', Object.fromEntries(formData));
+        document.getElementById('debugInfo').innerText = 'Debug Info: Form submitted, check console for details.';
+        searchForm.dataset.submitCount = (parseInt(searchForm.dataset.submitCount) || 0) + 1; // Track submission count
+        searchForm.submit(); // Ensure submission
+      });
+    } else {
+      console.error('Search form not found');
+    }
+
+    // Initialize Three.js for the search canvas
+    try {
+      const canvas = document.getElementById('bg');
+      if (!canvas) {
+        console.error('Canvas element not found');
+        return;
+      }
+      if (!window.THREE) {
+        console.error('Three.js library not loaded');
+        return;
+      }
+      console.log('Initializing Three.js effect for Search section');
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+      const renderer = new THREE.WebGLRenderer({ canvas, alpha: true });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setClearColor(0x000000, 0); // Transparent background
+      camera.position.z = 5;
+
+      const particles = new THREE.BufferGeometry();
+      const particleCount = 300;
+      const positions = new Float32Array(particleCount * 3);
+      const velocities = new Float32Array(particleCount * 3);
+
+      for (let i = 0; i < particleCount * 3; i += 3) {
+        positions[i] = (Math.random() - 0.5) * 20;
+        positions[i + 1] = (Math.random() - 0.5) * 20;
+        positions[i + 2] = (Math.random() - 0.5) * 20;
+        velocities[i] = (Math.random() - 0.5) * 0.02; // Reduced velocity for slower movement
+        velocities[i + 1] = (Math.random() - 0.5) * 0.02; // Reduced velocity for slower movement
+        velocities[i + 2] = (Math.random() - 0.5) * 0.02; // Reduced velocity for slower movement
+      }
+
+      particles.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+
+      const material = new THREE.PointsMaterial({
+        color: 0xff9800, // Orange color matching dashboard theme
+        size: 0.1,
+        transparent: true,
+        opacity: 0.8
+      });
+
+      const pointCloud = new THREE.Points(particles, material);
+      scene.add(pointCloud);
+
+      function animate() {
+        requestAnimationFrame(animate);
+        const positions = pointCloud.geometry.attributes.position.array;
+        for (let i = 0; i < particleCount * 3; i += 3) {
+          positions[i] += velocities[i];
+          positions[i + 1] += velocities[i + 1];
+          positions[i + 2] += velocities[i + 2];
+
+          if (positions[i] > 10 || positions[i] < -10) velocities[i] *= -1;
+          if (positions[i + 1] > 10 || positions[i + 1] < -10) velocities[i + 1] *= -1;
+          if (positions[i + 2] > 10 || positions[i + 2] < -10) velocities[i + 2] *= -1;
+        }
+        pointCloud.geometry.attributes.position.needsUpdate = true;
+        renderer.render(scene, camera);
+      }
+
+      animate();
+
+      window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      });
+    } catch (e) {
+      console.error('Three.js initialization failed:', e);
+    }
+  });
+</script>
